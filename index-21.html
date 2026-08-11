@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>BRVM Invest Pro</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0E1626">
+<style>
+  :root{
+    --bg:#0E1626;
+    --surface:#182238;
+    --surface-2:#212D48;
+    --line:#2C3A5C;
+    --gold:#D4A94C;
+    --gold-dim:#8A7134;
+    --ink:#EDEEF2;
+    --ink-dim:#9AA4BC;
+    --green:#4CAF7D;
+    --rust:#D2603A;
+    --radius:14px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    padding-bottom:78px;
+  }
+  h1,h2,h3{
+    font-family:Georgia,"Times New Roman",serif;
+    font-weight:600;
+    margin:0 0 4px 0;
+  }
+  .num{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum"; }
+
+  /* ===== Header ===== */
+  header.app{
+    padding:18px 18px 14px;
+    background:linear-gradient(180deg,#131C30,#0E1626);
+    border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:10;
+  }
+  header.app .eyebrow{
+    color:var(--gold); font-size:12px; letter-spacing:.14em; text-transform:uppercase; margin-bottom:2px;
+  }
+  header.app h1{ font-size:22px; color:var(--ink); }
+  header.app .sub{ color:var(--ink-dim); font-size:13px; margin-top:2px; }
+
+  /* ===== Layout ===== */
+  main{ padding:16px; max-width:640px; margin:0 auto; }
+  .view{ display:none; animation:fade .25s ease; }
+  .view.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .card h2{ font-size:16px; color:var(--ink); }
+  .card .desc{ color:var(--ink-dim); font-size:13px; margin-bottom:12px; }
+
+  label{ display:block; font-size:13px; color:var(--ink-dim); margin:10px 0 4px; }
+  input[type=text],input[type=number],select,textarea{
+    width:100%; background:var(--surface-2); border:1px solid var(--line); color:var(--ink);
+    border-radius:10px; padding:11px 12px; font-size:15px; font-family:inherit;
+  }
+  input:focus,select:focus,textarea:focus{ outline:2px solid var(--gold); outline-offset:1px; border-color:var(--gold); }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+  button{
+    font-family:inherit; font-size:15px; font-weight:600; border-radius:10px; border:none;
+    padding:12px 16px; cursor:pointer;
+  }
+  .btn-primary{ background:var(--gold); color:#1A1200; width:100%; margin-top:14px; }
+  .btn-primary:active{ background:#C39A3E; }
+  .btn-ghost{ background:transparent; color:var(--gold); border:1px solid var(--gold-dim); width:100%; margin-top:8px; }
+  .btn-danger{ background:transparent; color:var(--rust); border:1px solid var(--rust); font-size:13px; padding:8px 12px; }
+
+  .result{
+    margin-top:14px; padding:14px; background:var(--surface-2); border-radius:10px;
+    border-left:3px solid var(--gold);
+  }
+  .result .line{ display:flex; justify-content:space-between; padding:5px 0; font-size:14px; color:var(--ink-dim); }
+  .result .line b{ color:var(--ink); font-weight:600; }
+  .result .total{ display:flex; justify-content:space-between; padding-top:10px; margin-top:6px; border-top:1px solid var(--line); font-size:17px; }
+  .pos{ color:var(--green); } .neg{ color:var(--rust); }
+
+  /* ===== Nav bottom ===== */
+  nav.tabbar{
+    position:fixed; bottom:0; left:0; right:0; z-index:20;
+    background:#0B111F; border-top:1px solid var(--line);
+    display:flex; justify-content:space-around; padding:6px 2px 8px;
+  }
+  nav.tabbar button{
+    background:none; flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+    color:var(--ink-dim); font-size:9.5px; font-weight:500; padding:5px 1px; border-radius:8px;
+  }
+  nav.tabbar button.active{ color:var(--gold); }
+  nav.tabbar .ic{ font-size:17px; line-height:1; }
+  .alert-box{
+    background:rgba(210,96,58,.1); border:1px solid rgba(210,96,58,.4); border-radius:10px;
+    padding:11px 12px; margin-bottom:12px; font-size:13px; color:#E8A085;
+  }
+  .alert-box.warn-gold{ background:rgba(212,169,76,.1); border-color:rgba(212,169,76,.4); color:var(--gold); }
+  .lesson{ margin-bottom:14px; padding-left:14px; border-left:2px solid var(--rust); }
+  .lesson .tag{ font-size:11px; color:var(--rust); text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+  .lesson p{ margin:4px 0 0; font-size:13.5px; color:var(--ink); line-height:1.5; }
+  .principe{ margin-bottom:14px; padding-left:14px; border-left:2px solid var(--gold); }
+  .principe .tag{ font-size:11px; color:var(--gold); text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+  .principe p{ margin:4px 0 0; font-size:13.5px; color:var(--ink); line-height:1.5; }
+  .check-item{ display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); cursor:pointer; }
+  .check-item:last-child{ border-bottom:none; }
+  .check-item .box{ width:20px; height:20px; border-radius:5px; border:2px solid var(--gold-dim); flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; font-size:13px; }
+  .check-item.checked .box{ background:var(--gold); border-color:var(--gold); color:#1A1200; }
+  .check-item span.txt{ font-size:13.5px; color:var(--ink); line-height:1.4; }
+  .check-item.checked span.txt{ color:var(--ink-dim); text-decoration:line-through; }
+
+  /* ===== PRO ===== */
+  .pro-lock{
+    text-align:center; padding:24px 14px; background:var(--surface-2); border-radius:12px; border:1px dashed var(--gold-dim);
+  }
+  .pro-lock .ic{ font-size:28px; display:block; margin-bottom:8px; }
+  .pro-lock p{ color:var(--ink-dim); font-size:13px; margin:6px 0 14px; }
+  .pro-badge{ display:inline-block; background:rgba(212,169,76,.15); color:var(--gold); font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; letter-spacing:.03em; }
+  .modal-overlay{ position:fixed; inset:0; background:rgba(6,9,17,.85); z-index:60; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .modal-box{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px; max-width:380px; width:100%; max-height:85vh; overflow-y:auto; }
+  .modal-box h2{ font-size:16px; }
+  .modal-close{ float:right; background:none; color:var(--ink-dim); font-size:20px; padding:0 4px; }
+  .pill-toggle{ display:flex; gap:8px; margin:8px 0; }
+  .pill-toggle button{ flex:1; background:var(--surface-2); color:var(--ink-dim); border:1px solid var(--line); font-size:13px; padding:9px; }
+  .pill-toggle button.active{ background:rgba(212,169,76,.15); color:var(--gold); border-color:var(--gold-dim); }
+  .code-result{ background:var(--surface-2); border:1px solid var(--gold-dim); border-radius:10px; padding:12px; margin-top:10px; text-align:center; font-family:ui-monospace,monospace; font-size:16px; letter-spacing:.04em; color:var(--gold); word-break:break-all; }
+  select#pfSelector{ font-weight:700; }
+  .header-title-tap{ cursor:default; user-select:none; }
+
+  /* ===== Portfolio table ===== */
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  th{ text-align:left; color:var(--ink-dim); font-weight:500; padding:6px 4px; border-bottom:1px solid var(--line); font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; }
+  td{ padding:9px 4px; border-bottom:1px solid var(--line); }
+  tr:last-child td{ border-bottom:none; }
+  .ticker-badge{ display:inline-block; background:var(--surface-2); color:var(--gold); border-radius:5px; padding:2px 6px; font-size:11.5px; font-weight:700; letter-spacing:.03em; }
+  .row-actions{ display:flex; gap:6px; margin-top:4px; }
+  .row-actions button{ padding:5px 9px; font-size:11.5px; }
+
+  .empty{ text-align:center; padding:30px 10px; color:var(--ink-dim); }
+  .empty .ic{ font-size:34px; display:block; margin-bottom:8px; }
+
+  .kpi-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .kpi{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:14px; }
+  .kpi .lbl{ color:var(--ink-dim); font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; }
+  .kpi .val{ font-size:20px; font-weight:700; margin-top:4px; }
+
+  .barwrap{ background:var(--surface-2); border-radius:6px; height:8px; overflow:hidden; margin-top:6px; }
+  .bar{ height:100%; background:var(--gold); border-radius:6px; }
+
+  .quiz-q{ margin-bottom:16px; }
+  .quiz-q p{ font-size:14.5px; margin:0 0 8px; color:var(--ink); }
+  .quiz-opt{ display:block; width:100%; text-align:left; background:var(--surface-2); border:1px solid var(--line); color:var(--ink); margin-bottom:6px; padding:11px 12px; border-radius:10px; font-size:14px; font-weight:400; }
+  .quiz-opt.selected{ border-color:var(--gold); background:rgba(212,169,76,.12); color:var(--gold); }
+
+  .profile-badge{ text-align:center; padding:22px 12px; }
+  .profile-badge .tag{ display:inline-block; padding:6px 16px; border-radius:999px; background:rgba(212,169,76,.15); color:var(--gold); font-weight:700; font-size:15px; margin-bottom:8px; }
+
+  .note{ font-size:12px; color:var(--ink-dim); line-height:1.5; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); }
+  .badge-flag{ font-size:10.5px; padding:2px 6px; border-radius:5px; margin-left:6px; }
+  .flag-ok{ background:rgba(76,175,125,.15); color:var(--green); }
+  .flag-check{ background:rgba(210,96,58,.15); color:var(--rust); }
+
+  svg.chart{ width:100%; height:auto; display:block; }
+
+  ::selection{ background:var(--gold); color:#1A1200; }
+
+  @media print{
+    nav.tabbar, header.app .eyebrow, .btn-primary, .btn-ghost, .row-actions, #pfSelector, #pfMultiActions{ display:none !important; }
+    body{ background:#fff; color:#000; padding-bottom:0; }
+    .card{ border:1px solid #ccc; background:#fff; }
+    .view{ display:block !important; }
+    #view-dashboard, #view-calc, #view-simulateur, #view-profil, #view-societes, #view-expert{ display:none !important; }
+    th,td{ border-color:#ccc; color:#000; }
+    .ticker-badge{ background:#eee; color:#000; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div class="eyebrow">Marché régional UEMOA <span class="pro-badge" id="proHeaderBadge" style="display:none;">PRO</span></div>
+  <h1 id="headerTitle" class="header-title-tap" onclick="onTitleTap()">BRVM Invest Pro</h1>
+  <div class="sub" id="headerSub">Ton compagnon pour investir sereinement</div>
+</header>
+
+<main>
+
+  <!-- ===================== TABLEAU DE BORD ===================== -->
+  <section class="view active" id="view-dashboard">
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="lbl">Valeur du portefeuille</div>
+        <div class="val num" id="kpiValeur">0 FCFA</div>
+      </div>
+      <div class="kpi">
+        <div class="lbl">Gain / Perte latent</div>
+        <div class="val num" id="kpiGain">0 FCFA</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Bienvenue 👋</h2>
+      <div class="desc">Cet outil réunit ce qu'il faut pour investir à la BRVM, même en débutant — 100% hors-ligne, tes données restent uniquement sur ton téléphone.</div>
+      <div class="note">
+        <strong>Comment ça marche :</strong> saisis tes cours manuellement (aucune connexion requise, aucune donnée envoyée nulle part). Mets à jour les prix quand tu consultes le cours officiel sur brvm.org ou via ta SGI.
+      </div>
+    </div>
+
+    <div class="card" id="dashRepartition">
+      <h2>Répartition par secteur</h2>
+      <div class="desc" id="repartEmpty">Ajoute des positions dans l'onglet Portefeuille pour voir ta répartition.</div>
+      <div id="repartBars"></div>
+    </div>
+
+    <div class="card" id="dashHistorique" style="display:none;">
+      <h2>Évolution de la valeur</h2>
+      <div class="desc">Un point est enregistré automatiquement chaque jour où tu ouvres l'app.</div>
+      <div id="histoChartWrap"></div>
+    </div>
+
+    <div class="card">
+      <h2>Ton profil investisseur</h2>
+      <div class="desc" id="dashProfileText">Tu n'as pas encore fait le test de profil.</div>
+      <button class="btn-ghost" onclick="goTo('profil')">Faire / revoir le test →</button>
+    </div>
+
+    <div class="card">
+      <h2>🎓 Acquis des investisseurs expérimentés</h2>
+      <div class="desc">Erreurs classiques à éviter, principes éprouvés, et checklist avant chaque ordre.</div>
+      <button class="btn-ghost" onclick="goTo('expert')">Consulter →</button>
+    </div>
+  </section>
+
+  <!-- ===================== CALCULATEUR ===================== -->
+  <section class="view" id="view-calc">
+    <div class="card">
+      <h2>Calculateur gains / pertes</h2>
+      <div class="desc">Calcule ton résultat net après frais de courtage, avant de passer un ordre.</div>
+
+      <label>Prix d'achat unitaire (FCFA)</label>
+      <input type="number" id="calcPrixAchat" inputmode="decimal" placeholder="ex: 8500">
+
+      <label>Prix de vente unitaire (FCFA) — ou cours actuel</label>
+      <input type="number" id="calcPrixVente" inputmode="decimal" placeholder="ex: 9200">
+
+      <label>Quantité de titres</label>
+      <input type="number" id="calcQte" inputmode="numeric" placeholder="ex: 10">
+
+      <div class="row2">
+        <div>
+          <label>Frais total (%) — courtage + commissions</label>
+          <input type="number" id="calcFraisPct" inputmode="decimal" value="1.5" step="0.1">
+        </div>
+        <div>
+          <label>Frais minimum par ordre (FCFA)</label>
+          <input type="number" id="calcFraisMin" inputmode="decimal" value="0">
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="calculerGain()">Calculer</button>
+
+      <div class="result" id="calcResult" style="display:none;"></div>
+      <div class="note">Le taux de frais varie selon ta SGI (souvent entre 1% et 1,5%, parfois négociable). Confirme le taux exact appliqué par Coris Bourse avant de te fier au résultat.</div>
+    </div>
+  </section>
+
+  <!-- ===================== PORTEFEUILLE ===================== -->
+  <section class="view" id="view-portefeuille">
+    <div class="card">
+      <h2>Mes portefeuilles</h2>
+      <select id="pfSelector" onchange="changerPortefeuilleActif(this.value)"></select>
+      <div id="pfMultiActions" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="card">
+      <h2>Ajouter une position</h2>
+      <label>Société</label>
+      <select id="pfSociete"></select>
+
+      <div class="row2">
+        <div>
+          <label>Quantité</label>
+          <input type="number" id="pfQte" inputmode="numeric" placeholder="10">
+        </div>
+        <div>
+          <label>Prix d'achat unitaire</label>
+          <input type="number" id="pfPrixAchat" inputmode="decimal" placeholder="8500">
+        </div>
+      </div>
+      <label>Prix actuel (mets à jour régulièrement)</label>
+      <input type="number" id="pfPrixActuel" inputmode="decimal" placeholder="8500">
+      <label>Prix cible de vente (optionnel — objectif PRO)</label>
+      <input type="number" id="pfPrixCible" inputmode="decimal" placeholder="ex: 10000">
+
+      <button class="btn-primary" onclick="ajouterPosition()">Ajouter au portefeuille</button>
+    </div>
+
+    <div class="card">
+      <h2>Mes positions</h2>
+      <button class="btn-ghost" id="btnActualiserPrix" onclick="actualiserPrixEnLigne()">🔄 Actualiser tous les prix en ligne (bêta)</button>
+      <div id="actualisationStatus"></div>
+      <div class="note">Source communautaire non officielle (indépendante de la BRVM) — en cas d'échec ou de doute, corrige toujours le prix toi-même dans le tableau ci-dessous.</div>
+      <div id="pfListWrap" style="margin-top:10px;">
+        <div class="empty"><span class="ic">📊</span>Aucune position pour l'instant.</div>
+      </div>
+      <div id="pfExportWrap" style="margin-top:12px;"></div>
+    </div>
+  </section>
+
+  <!-- ===================== SIMULATEUR ===================== -->
+  <section class="view" id="view-simulateur">
+    <div class="card">
+      <h2>Simulateur d'intérêts composés</h2>
+      <div class="desc">Projette la croissance de ton épargne investie à la BRVM sur plusieurs années.</div>
+
+      <label>Capital initial (FCFA)</label>
+      <input type="number" id="simCapital" inputmode="decimal" placeholder="ex: 100000">
+
+      <label>Versement mensuel (FCFA)</label>
+      <input type="number" id="simVersement" inputmode="decimal" placeholder="ex: 15000">
+
+      <div class="row2">
+        <div>
+          <label>Rendement annuel estimé (%)</label>
+          <input type="number" id="simTaux" inputmode="decimal" value="10" step="0.5">
+        </div>
+        <div>
+          <label>Durée (années)</label>
+          <input type="number" id="simDuree" inputmode="numeric" value="5">
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="simulerInterets()">Simuler</button>
+
+      <div class="result" id="simResult" style="display:none;"></div>
+      <div id="simChartWrap" style="margin-top:14px;"></div>
+      <div class="note">Estimation illustrative uniquement — les rendements passés de la BRVM (souvent cités entre 8% et 15% selon les secteurs) ne garantissent pas les performances futures. Le capital investi en actions n'est jamais garanti.</div>
+    </div>
+  </section>
+
+  <!-- ===================== PROFIL ===================== -->
+  <section class="view" id="view-profil">
+    <div class="card">
+      <h2>Quel est ton profil investisseur ?</h2>
+      <div class="desc">5 questions rapides pour mieux calibrer tes décisions d'investissement.</div>
+      <div id="quizWrap"></div>
+      <button class="btn-primary" onclick="calculerProfil()">Voir mon profil</button>
+    </div>
+    <div class="card" id="profilResultCard" style="display:none;"></div>
+  </section>
+
+  <!-- ===================== EXPERT ===================== -->
+  <section class="view" id="view-expert">
+
+    <div class="card" id="proStatusCard"></div>
+
+    <div class="card" id="proFondamentaleCard"></div>
+
+    <div class="card" id="proDecisionCard"></div>
+
+    <div class="card" id="proFiscalCard"></div>
+
+    <div class="card" id="proJournalCard"></div>
+
+    <div class="card">
+      <h2>🎓 Les erreurs classiques à ne plus commettre</h2>
+      <div class="desc">Ce que les investisseurs expérimentés de la BRVM ont appris à leurs dépens.</div>
+      <div id="erreursWrap"></div>
+    </div>
+
+    <div class="card">
+      <h2>🧠 Principes des investisseurs aguerris</h2>
+      <div id="principesWrap"></div>
+    </div>
+
+    <div class="card">
+      <h2>✅ Checklist avant de passer un ordre</h2>
+      <div class="desc">Coche chaque point avant d'investir — elle se réinitialise pour chaque nouvelle décision.</div>
+      <div id="checklistWrap"></div>
+      <button class="btn-ghost" onclick="resetChecklist()">Réinitialiser la checklist</button>
+    </div>
+  </section>
+
+  <!-- ===================== SOCIÉTÉS ===================== -->
+  <section class="view" id="view-societes">
+    <div class="card">
+      <h2>Sociétés cotées (47 au total)</h2>
+      <div class="desc">Liste de départ modifiable — complète-la avec ton guide BRVM personnel pour couvrir les 47 valeurs.</div>
+      <input type="text" id="socSearch" placeholder="Rechercher une société ou un secteur..." oninput="renderSocietes()">
+      <div id="socListWrap" style="margin-top:12px;"></div>
+
+      <h2 style="margin-top:18px;">Ajouter une société</h2>
+      <div class="row2">
+        <div><label>Ticker</label><input type="text" id="socTicker" placeholder="ex: SNTS"></div>
+        <div><label>Secteur</label><input type="text" id="socSecteur" placeholder="ex: Télécoms"></div>
+      </div>
+      <label>Nom complet</label>
+      <input type="text" id="socNom" placeholder="ex: Sonatel">
+      <label>Vigilance finance islamique</label>
+      <select id="socFlag">
+        <option value="ok">Pas d'alerte particulière identifiée</option>
+        <option value="check">À vérifier (banque/assurance conventionnelle, secteur sensible...)</option>
+      </select>
+      <button class="btn-primary" onclick="ajouterSociete()">Ajouter à la liste</button>
+      <div class="note">⚠️ Ces indications ne sont pas une fatwa ni un avis religieux définitif. Elles signalent simplement les secteurs qui nécessitent souvent une vérification (activité à intérêt, alcool, jeux d'argent...). Vérifie toujours auprès d'un savant ou de ton propre guide de référence.</div>
+    </div>
+  </section>
+
+</main>
+
+<nav class="tabbar">
+  <button class="tab-btn active" data-tab="dashboard" onclick="goTo('dashboard')"><span class="ic">🏠</span>Accueil</button>
+  <button class="tab-btn" data-tab="calc" onclick="goTo('calc')"><span class="ic">🧮</span>Calcul</button>
+  <button class="tab-btn" data-tab="portefeuille" onclick="goTo('portefeuille')"><span class="ic">💼</span>Portefeuille</button>
+  <button class="tab-btn" data-tab="simulateur" onclick="goTo('simulateur')"><span class="ic">📈</span>Simuler</button>
+  <button class="tab-btn" data-tab="profil" onclick="goTo('profil')"><span class="ic">🧭</span>Profil</button>
+  <button class="tab-btn" data-tab="societes" onclick="goTo('societes')"><span class="ic">🏢</span>Sociétés</button>
+  <button class="tab-btn" data-tab="expert" onclick="goTo('expert')"><span class="ic">🎓</span>Expert</button>
+</nav>
+
+<!-- ===================== MODAL VENDEUR (génération de codes) ===================== -->
+<div class="modal-overlay" id="adminModal" style="display:none;">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeAdminModal()">✕</button>
+    <h2>🔐 Espace vendeur — Générer un code</h2>
+    <div class="desc" style="color:var(--ink-dim);font-size:12.5px;margin-bottom:10px;">Génère un code à remettre au client après paiement (mobile money, espèces...).</div>
+
+    <label>Type de code</label>
+    <div class="pill-toggle">
+      <button type="button" class="active" id="genTypeVieBtn" onclick="setGenType('vie')">À vie</button>
+      <button type="button" id="genTypeMoisBtn" onclick="setGenType('mois')">Mensuel</button>
+    </div>
+
+    <label>Identifiant client (téléphone, nom court...)</label>
+    <input type="text" id="genSerial" placeholder="ex: 70123456">
+
+    <div id="genMonthWrap" style="display:none;">
+      <label>Mois concerné</label>
+      <input type="month" id="genMonth">
+    </div>
+
+    <button class="btn-primary" onclick="genererCode()">Générer le code</button>
+    <div class="code-result" id="genResultBox" style="display:none;"></div>
+    <button class="btn-ghost" id="genCopyBtn" style="display:none;" onclick="copierCodeGenere()">Copier le code</button>
+  </div>
+</div>
+
+<script>
+/* ================= Utilitaires ================= */
+function fmt(n){
+  if(isNaN(n)) n = 0;
+  return Math.round(n).toLocaleString('fr-FR') + ' FCFA';
+}
+function fmtNum(n){ return Math.round(n).toLocaleString('fr-FR'); }
+function load(key, fallback){
+  try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }catch(e){ return fallback; }
+}
+function save(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+/* ================= Navigation ================= */
+function goTo(tab){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.tab-btn[data-tab="'+tab+'"]').classList.add('active');
+  window.scrollTo(0,0);
+  if(tab==='dashboard') renderDashboard();
+  if(tab==='portefeuille') { renderSocieteSelect(); renderPortefeuilleSelector(); renderPortefeuille(); }
+  if(tab==='societes') renderSocietes();
+  if(tab==='expert') { renderProStatus(); renderAllProCards(); }
+}
+
+/* ================= Données de départ : sociétés ================= */
+const SOCIETES_SEED = [
+  {ticker:'SNTS', nom:'Sonatel', secteur:'Télécommunications', flag:'ok'},
+  {ticker:'ORAC', nom:'Orange Côte d\'Ivoire', secteur:'Télécommunications', flag:'ok'},
+  {ticker:'ETIT', nom:'Ecobank Transnational', secteur:'Banque', flag:'check'},
+  {ticker:'SGBC', nom:'Société Générale Côte d\'Ivoire', secteur:'Banque', flag:'check'},
+  {ticker:'BOAB', nom:'Bank Of Africa Bénin', secteur:'Banque', flag:'check'},
+  {ticker:'BICC', nom:'BICI Côte d\'Ivoire', secteur:'Banque', flag:'check'},
+  {ticker:'NTLC', nom:'Nestlé Côte d\'Ivoire', secteur:'Agroalimentaire', flag:'ok'},
+  {ticker:'UNLC', nom:'Unilever Côte d\'Ivoire', secteur:'Biens de consommation', flag:'check'},
+  {ticker:'SLBC', nom:'Solibra', secteur:'Boissons', flag:'check'},
+  {ticker:'SICC', nom:'Sicable Côte d\'Ivoire', secteur:'Industrie', flag:'ok'},
+  {ticker:'SUCR', nom:'Sucrivoire', secteur:'Agro-industrie', flag:'ok'},
+  {ticker:'PALC', nom:'Palm Côte d\'Ivoire', secteur:'Agro-industrie', flag:'ok'},
+  {ticker:'SAPH', nom:'SAPH', secteur:'Caoutchouc / Agro-industrie', flag:'ok'},
+  {ticker:'CFAC', nom:'CFAO Motors Côte d\'Ivoire', secteur:'Distribution automobile', flag:'ok'},
+  {ticker:'TTLC', nom:'TotalEnergies Marketing CI', secteur:'Énergie / Distribution', flag:'ok'},
+];
+
+/* ================= État applicatif ================= */
+let societes = load('brvm_societes', SOCIETES_SEED);
+let profilResultat = load('brvm_profil', null);
+
+// Migration vers le multi-portefeuilles
+let portefeuilles = load('brvm_portefeuilles', null);
+if(!portefeuilles){
+  const ancien = load('brvm_portefeuille', []);
+  portefeuilles = [{id:1, nom:'Portefeuille principal', positions:ancien}];
+  save('brvm_portefeuilles', portefeuilles);
+}
+let pfActiveId = load('brvm_pf_active', portefeuilles[0].id);
+function getActivePF(){
+  return portefeuilles.find(p=>p.id===pfActiveId) || portefeuilles[0];
+}
+
+/* ================= Système PRO — licence locale ================= */
+const PRO_SALT = "3nhlv_wKg3fYaKfIRct9ead-"; // ⚠️ garde-le secret, ne le partage jamais
+const ADMIN_PASS = "RQ3021JW23"; // ⚠️ mot de passe vendeur — garde-le secret, ne le partage jamais
+
+function hashCode(str){
+  let h1=0xdeadbeef, h2=0x41c6ce57;
+  for(let i=0;i<str.length;i++){
+    const ch=str.charCodeAt(i);
+    h1=Math.imul(h1^ch,2654435761); h2=Math.imul(h2^ch,1597334677);
+  }
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
+  h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+  const combined = 4294967296*(2097151&h2)+(h1>>>0);
+  return combined.toString(16).toUpperCase().padStart(8,'0').slice(0,6);
+}
+function genererCodeVie(serial){ return `VIE-${serial}-${hashCode('VIE-'+serial+'-'+PRO_SALT)}`; }
+function genererCodeMois(serial,yyyymm){ return `MOIS-${yyyymm}-${serial}-${hashCode('MOIS-'+serial+'-'+yyyymm+'-'+PRO_SALT)}`; }
+
+function validerCode(code){
+  code = (code||'').trim().toUpperCase();
+  const parts = code.split('-');
+  if(parts[0]==='VIE' && parts.length===3){
+    if(hashCode('VIE-'+parts[1]+'-'+PRO_SALT)===parts[2]) return {ok:true,type:'vie',expiresAt:null};
+  } else if(parts[0]==='MOIS' && parts.length===4){
+    const yyyymm=parts[1];
+    if(hashCode('MOIS-'+parts[2]+'-'+yyyymm+'-'+PRO_SALT)===parts[3]){
+      const y=parseInt(yyyymm.slice(0,4)), m=parseInt(yyyymm.slice(4,6));
+      const expiresAt = new Date(y,m,0,23,59,59).toISOString();
+      return {ok:true,type:'mois',expiresAt,yyyymm};
+    }
+  }
+  return {ok:false};
+}
+function isPro(){
+  const act = load('brvm_pro_activation', null);
+  if(!act) return false;
+  if(act.type==='vie') return true;
+  if(act.type==='mois') return new Date() <= new Date(act.expiresAt);
+  return false;
+}
+function activerCode(){
+  const input = document.getElementById('proCodeInput');
+  const res = validerCode(input.value);
+  const msgEl = document.getElementById('proActivationMsg');
+  if(res.ok){
+    save('brvm_pro_activation', {type:res.type, code:input.value.trim().toUpperCase(), activatedAt:new Date().toISOString(), expiresAt:res.expiresAt});
+    renderProStatus(); renderAllProCards(); renderPortefeuilleSelector();
+  } else {
+    msgEl.innerHTML = '<div class="alert-box">❌ Code invalide. Vérifie la saisie ou contacte le vendeur.</div>';
+  }
+}
+function renderProStatus(){
+  const pro = isPro();
+  const act = load('brvm_pro_activation', null);
+  document.getElementById('proHeaderBadge').style.display = pro ? 'inline-block':'none';
+  const card = document.getElementById('proStatusCard');
+  if(pro){
+    const expTxt = act.type==='vie' ? 'Accès à vie ✓' : `Actif jusqu'au ${new Date(act.expiresAt).toLocaleDateString('fr-FR')}`;
+    card.innerHTML = `<h2>💎 Version PRO active</h2><div class="desc">${expTxt}</div>`;
+  } else {
+    card.innerHTML = `
+      <h2>💎 Débloquer la Version PRO</h2>
+      <div class="desc">Analyse fondamentale (PER/PBR/rendement), multi-portefeuilles, export de rapports, objectifs de cours, calcul fiscal et journal de décisions.</div>
+      <label>Code d'activation</label>
+      <input type="text" id="proCodeInput" placeholder="ex: VIE-70123456-A1B2C3" style="text-transform:uppercase;">
+      <button class="btn-primary" onclick="activerCode()">Activer</button>
+      <div id="proActivationMsg"></div>
+    `;
+  }
+}
+function renderAllProCards(){
+  renderFondamentale();
+  renderDecisionEngine();
+  renderFiscal();
+  renderJournal();
+  renderPortefeuille();
+}
+function proLockHtml(titre, desc){
+  return `<h2>${titre} <span class="pro-badge">PRO</span></h2>
+    <div class="pro-lock"><span class="ic">🔒</span><p>${desc}</p>
+    <button class="btn-ghost" onclick="scrollToProUnlock()">Débloquer avec un code</button></div>`;
+}
+function scrollToProUnlock(){
+  document.getElementById('proStatusCard').scrollIntoView({behavior:'smooth'});
+}
+
+/* --- Espace vendeur (génération de codes) --- */
+let titleTaps=0, titleTapTimer=null, genType='vie';
+function onTitleTap(){
+  titleTaps++;
+  clearTimeout(titleTapTimer);
+  titleTapTimer=setTimeout(()=>{titleTaps=0;},2500);
+  if(titleTaps>=7){
+    titleTaps=0;
+    const pass = prompt('Mot de passe vendeur :');
+    if(pass===null) return;
+    if(pass===ADMIN_PASS){ openAdminModal(); } else { alert('Mot de passe incorrect.'); }
+  }
+}
+function openAdminModal(){ document.getElementById('adminModal').style.display='flex'; }
+function closeAdminModal(){ document.getElementById('adminModal').style.display='none'; }
+function setGenType(t){
+  genType=t;
+  document.getElementById('genTypeVieBtn').classList.toggle('active', t==='vie');
+  document.getElementById('genTypeMoisBtn').classList.toggle('active', t==='mois');
+  document.getElementById('genMonthWrap').style.display = t==='mois' ? 'block':'none';
+}
+function genererCode(){
+  const serial = document.getElementById('genSerial').value.trim() || Date.now().toString().slice(-6);
+  let code;
+  if(genType==='vie'){
+    code = genererCodeVie(serial);
+  } else {
+    let val = document.getElementById('genMonth').value;
+    let yyyymm;
+    if(val){ yyyymm = val.replace('-',''); }
+    else { const d=new Date(); yyyymm = ''+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0'); }
+    code = genererCodeMois(serial, yyyymm);
+  }
+  const box = document.getElementById('genResultBox');
+  box.style.display='block';
+  box.textContent = code;
+  document.getElementById('genCopyBtn').style.display='block';
+}
+function copierCodeGenere(){
+  const txt = document.getElementById('genResultBox').textContent;
+  if(navigator.clipboard){ navigator.clipboard.writeText(txt); alert('Code copié !'); }
+}
+
+/* --- Multi-portefeuilles --- */
+function renderPortefeuilleSelector(){
+  const sel = document.getElementById('pfSelector');
+  sel.innerHTML = portefeuilles.map(p=>`<option value="${p.id}" ${p.id===pfActiveId?'selected':''}>${p.nom}</option>`).join('');
+  const actions = document.getElementById('pfMultiActions');
+  if(isPro()){
+    actions.innerHTML = `<button class="btn-ghost" onclick="creerPortefeuille()">+ Nouveau portefeuille</button>
+      ${portefeuilles.length>1 ? `<button class="btn-danger" style="margin-top:6px;width:100%;" onclick="supprimerPortefeuilleActif()">Supprimer ce portefeuille</button>` : ''}`;
+  } else {
+    actions.innerHTML = `<div class="note">💎 La version PRO permet de créer plusieurs portefeuilles (perso, GFA, client...). <a href="#" onclick="scrollToProUnlock();return false;" style="color:var(--gold);">Débloquer →</a></div>`;
+  }
+}
+function changerPortefeuilleActif(id){
+  pfActiveId = parseInt(id);
+  save('brvm_pf_active', pfActiveId);
+  renderPortefeuille();
+  recalcAll();
+}
+function creerPortefeuille(){
+  if(!isPro()){ scrollToProUnlock(); return; }
+  const nom = prompt('Nom du nouveau portefeuille :', 'Nouveau portefeuille');
+  if(!nom) return;
+  const id = Date.now();
+  portefeuilles.push({id, nom, positions:[]});
+  save('brvm_portefeuilles', portefeuilles);
+  pfActiveId = id;
+  save('brvm_pf_active', pfActiveId);
+  renderPortefeuilleSelector();
+  renderPortefeuille();
+  recalcAll();
+}
+function supprimerPortefeuilleActif(){
+  if(portefeuilles.length<=1) return;
+  if(!confirm('Supprimer ce portefeuille et toutes ses positions ?')) return;
+  portefeuilles = portefeuilles.filter(p=>p.id!==pfActiveId);
+  save('brvm_portefeuilles', portefeuilles);
+  pfActiveId = portefeuilles[0].id;
+  save('brvm_pf_active', pfActiveId);
+  renderPortefeuilleSelector();
+  renderPortefeuille();
+  recalcAll();
+}
+
+/* --- Analyse fondamentale (PRO) --- */
+function renderFondamentale(){
+  const card = document.getElementById('proFondamentaleCard');
+  if(!isPro()){
+    card.innerHTML = proLockHtml('📐 Analyse fondamentale', "Calcule le PER, le PBR et le rendement du dividende d'une société avant d'investir — comme le font les investisseurs expérimentés.");
+    return;
+  }
+  card.innerHTML = `
+    <h2>📐 Analyse fondamentale <span class="pro-badge">PRO</span></h2>
+    <div class="desc">Renseigne les données financières de la société pour obtenir ses ratios clés et son score.</div>
+    <label>Ticker (optionnel — pour sauvegarder le score)</label>
+    <input type="text" id="fdTicker" placeholder="ex: SNTS">
+    <label>Cours actuel (FCFA)</label>
+    <input type="number" id="fdCours" inputmode="decimal" placeholder="ex: 8500">
+    <label>Bénéfice net par action - BPA (FCFA)</label>
+    <input type="number" id="fdBpa" inputmode="decimal" placeholder="ex: 650">
+    <label>Capitaux propres par action (FCFA)</label>
+    <input type="number" id="fdCpa" inputmode="decimal" placeholder="ex: 4200">
+    <label>Dividende versé par action (FCFA)</label>
+    <input type="number" id="fdDiv" inputmode="decimal" placeholder="ex: 400">
+    <button class="btn-primary" onclick="calculerFondamentale()">Calculer les ratios</button>
+    <div class="result" id="fdResult" style="display:none;"></div>
+    <div class="note">Ces ratios s'interprètent toujours en les comparant à d'autres sociétés du même secteur — un PER élevé n'est pas forcément mauvais s'il reflète une forte croissance attendue.</div>
+  `;
+}
+function calculerFondamentale(){
+  const ticker = document.getElementById('fdTicker').value.trim().toUpperCase();
+  const cours = parseFloat(document.getElementById('fdCours').value)||0;
+  const bpa = parseFloat(document.getElementById('fdBpa').value)||0;
+  const cpa = parseFloat(document.getElementById('fdCpa').value)||0;
+  const div = parseFloat(document.getElementById('fdDiv').value)||0;
+  const per = bpa>0 ? cours/bpa : 0;
+  const pbr = cpa>0 ? cours/cpa : 0;
+  const rendement = cours>0 ? div/cours*100 : 0;
+  const scoreFond = calculerScoreFondamental(per,pbr,rendement);
+
+  if(ticker){
+    let scores = load('brvm_scores_fondamentaux', {});
+    scores[ticker] = {score:scoreFond.score, per, pbr, rendement, date:new Date().toISOString()};
+    save('brvm_scores_fondamentaux', scores);
+    renderDecisionEngine();
+  }
+
+  const el = document.getElementById('fdResult');
+  el.style.display='block';
+  el.innerHTML = `
+    <div class="line"><span>PER (prix / bénéfice)</span><b class="num">${per.toFixed(1)}</b></div>
+    <div class="line"><span>PBR (prix / valeur comptable)</span><b class="num">${pbr.toFixed(2)}</b></div>
+    <div class="line"><span>Rendement du dividende</span><b class="num">${rendement.toFixed(2)}%</b></div>
+    <div class="total"><span>Score fondamental</span><b class="num">${scoreFond.score}/100</b></div>
+    ${ticker ? `<div class="note" style="border:none;padding-top:6px;margin-top:2px;">Score sauvegardé pour ${ticker} — utilisable dans le Decision Engine ci-dessous.</div>` : ''}
+  `;
+}
+
+/* --- Moteurs de score (transparents, basés sur des règles) --- */
+function calculerScoreFondamental(per,pbr,rendement){
+  let detail=[], s=0, pts;
+  if(per<=0){ pts=0; detail.push({label:'PER non calculable',pts:0}); }
+  else if(per<10){ pts=40; detail.push({label:`PER ${per.toFixed(1)} — valorisation modérée`,pts:40}); }
+  else if(per<18){ pts=25; detail.push({label:`PER ${per.toFixed(1)} — dans la moyenne du marché`,pts:25}); }
+  else { pts=10; detail.push({label:`PER ${per.toFixed(1)} — valorisation élevée`,pts:10}); }
+  s+=pts;
+
+  if(pbr<=0){ pts=0; detail.push({label:'PBR non calculable',pts:0}); }
+  else if(pbr<1){ pts=35; detail.push({label:`PBR ${pbr.toFixed(2)} — sous la valeur comptable`,pts:35}); }
+  else if(pbr<2.5){ pts=20; detail.push({label:`PBR ${pbr.toFixed(2)} — raisonnable`,pts:20}); }
+  else { pts=8; detail.push({label:`PBR ${pbr.toFixed(2)} — élevé`,pts:8}); }
+  s+=pts;
+
+  if(rendement>6){ pts=25; detail.push({label:`Rendement dividende ${rendement.toFixed(1)}% — généreux`,pts:25}); }
+  else if(rendement>=3){ pts=15; detail.push({label:`Rendement dividende ${rendement.toFixed(1)}% — correct`,pts:15}); }
+  else { pts=5; detail.push({label:`Rendement dividende ${rendement.toFixed(1)}% — faible`,pts:5}); }
+  s+=pts;
+
+  return {score:s, detail};
+}
+function calculerScoreRisque(){
+  const positions = portefeuilles.flatMap(pf=>pf.positions);
+  const valeurTotale = positions.reduce((s,p)=>s+p.qte*p.prixActuel,0);
+  const parTicker={};
+  positions.forEach(p=>{ parTicker[p.ticker]=(parTicker[p.ticker]||0)+p.qte*p.prixActuel; });
+  const maxPct = valeurTotale>0 ? Math.max(0,...Object.values(parTicker).map(v=>v/valeurTotale*100)) : 0;
+  let detail=[], s=0, pts;
+
+  if(positions.length===0){ pts=0; detail.push({label:'Aucune position — score non applicable',pts:0}); s+=pts; }
+  else {
+    if(maxPct<15){ pts=40; detail.push({label:`Concentration max ${maxPct.toFixed(0)}% — bien réparti`,pts:40}); }
+    else if(maxPct<30){ pts=25; detail.push({label:`Concentration max ${maxPct.toFixed(0)}% — acceptable`,pts:25}); }
+    else { pts=10; detail.push({label:`Concentration max ${maxPct.toFixed(0)}% — élevée`,pts:10}); }
+    s+=pts;
+
+    const secteurs = new Set(positions.map(p=>p.secteur)).size;
+    if(secteurs>=4){ pts=40; detail.push({label:`${secteurs} secteurs représentés — bonne diversification`,pts:40}); }
+    else if(secteurs>=2){ pts=25; detail.push({label:`${secteurs} secteurs représentés — diversification partielle`,pts:25}); }
+    else { pts=10; detail.push({label:`${secteurs} secteur(s) — faible diversification`,pts:10}); }
+    s+=pts;
+
+    if(positions.length>=7){ pts=20; detail.push({label:`${positions.length} positions — portefeuille étoffé`,pts:20}); }
+    else if(positions.length>=3){ pts=15; detail.push({label:`${positions.length} positions — base correcte`,pts:15}); }
+    else { pts=5; detail.push({label:`${positions.length} position(s) — portefeuille naissant`,pts:5}); }
+    s+=pts;
+  }
+  return {score:s, detail};
+}
+
+/* --- Decision Engine (PRO) : combine les scores, 100% transparent, sans IA-boîte-noire --- */
+function renderDecisionEngine(){
+  const card = document.getElementById('proDecisionCard');
+  if(!isPro()){
+    card.innerHTML = proLockHtml('🧭 Decision Engine', "Combine le score fondamental d'une société et le score de risque de ton portefeuille en une recommandation claire — chaque point est expliqué, aucune boîte noire.");
+    return;
+  }
+  const scores = load('brvm_scores_fondamentaux', {});
+  const tickers = Object.keys(scores);
+  card.innerHTML = `
+    <h2>🧭 Decision Engine <span class="pro-badge">PRO</span></h2>
+    <div class="desc">Moteur de règles transparent — pas une IA "boîte noire". Chaque point du score est visible et vérifiable.</div>
+    ${tickers.length===0 ? `<div class="note">Calcule d'abord au moins une analyse fondamentale avec un ticker ci-dessus pour l'utiliser ici.</div>` : `
+      <label>Société analysée</label>
+      <select id="deTicker">${tickers.map(t=>`<option value="${t}">${t} (score fond. ${scores[t].score}/100)</option>`).join('')}</select>
+      <button class="btn-primary" onclick="genererDecision()">Générer la recommandation</button>
+      <div id="deResult" style="margin-top:12px;"></div>
+    `}
+  `;
+}
+function genererDecision(){
+  const ticker = document.getElementById('deTicker').value;
+  const scores = load('brvm_scores_fondamentaux', {});
+  const fond = scores[ticker];
+  const risque = calculerScoreRisque();
+  const scoreGlobal = Math.round(fond.score*0.5 + risque.score*0.5);
+  let label, cls;
+  if(scoreGlobal<40){ label='🔴 Prudence recommandée'; cls='neg'; }
+  else if(scoreGlobal<70){ label='🟡 Neutre — à surveiller'; cls=''; }
+  else { label='🟢 Profil favorable'; cls='pos'; }
+
+  const detailHtml = (arr) => arr.map(d=>`<div class="line"><span>${d.label}</span><b class="num">${d.pts} pts</b></div>`).join('');
+
+  document.getElementById('deResult').innerHTML = `
+    <div class="result">
+      <div class="total ${cls}"><span>${ticker} — Score global</span><b class="num">${scoreGlobal}/100</b></div>
+      <div class="line" style="padding-top:8px;"><span><strong>${label}</strong></span></div>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.04em;">Détail — Fondamental (${fond.score}/100)</div>
+    ${detailHtml(fond.detail)}
+    <div style="margin-top:10px;font-size:12px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.04em;">Détail — Risque portefeuille (${risque.score}/100)</div>
+    ${detailHtml(risque.detail)}
+    <div class="note">⚠️ Ceci n'est pas un conseil financier ni une intelligence artificielle qui "apprend" de tes données — c'est un calcul de règles fixes, basé uniquement sur ce que tu as saisi. Vérifie toujours par toi-même avant de décider.</div>
+  `;
+}
+
+/* --- Calculateur fiscal (PRO) --- */
+function renderFiscal(){
+  const card = document.getElementById('proFiscalCard');
+  if(!isPro()){
+    card.innerHTML = proLockHtml('🧾 Calculateur fiscal', "Estime l'impôt retenu sur tes plus-values et dividendes selon le taux appliqué par ta SGI.");
+    return;
+  }
+  card.innerHTML = `
+    <h2>🧾 Calculateur fiscal <span class="pro-badge">PRO</span></h2>
+    <div class="desc">Le taux d'imposition varie selon le pays UEMOA et le type de revenu — renseigne-toi auprès de ta SGI (Coris Bourse) puis ajuste le taux ci-dessous.</div>
+    <div class="row2">
+      <div><label>Montant brut (FCFA)</label><input type="number" id="fiscMontant" inputmode="decimal" placeholder="ex: 50000"></div>
+      <div><label>Taux d'imposition (%)</label><input type="number" id="fiscTaux" inputmode="decimal" value="10" step="0.5"></div>
+    </div>
+    <button class="btn-primary" onclick="calculerFiscal()">Calculer</button>
+    <div class="result" id="fiscResult" style="display:none;"></div>
+    <div class="note">⚠️ Estimation générique — confirme le taux exact (IRVM/IRC selon le pays et le type de revenu) directement auprès de ta SGI avant toute déclaration.</div>
+  `;
+}
+function calculerFiscal(){
+  const m = parseFloat(document.getElementById('fiscMontant').value)||0;
+  const t = parseFloat(document.getElementById('fiscTaux').value)||0;
+  const impot = m*t/100;
+  const net = m-impot;
+  const el = document.getElementById('fiscResult');
+  el.style.display='block';
+  el.innerHTML = `
+    <div class="line"><span>Impôt estimé</span><b class="num neg">-${fmt(impot)}</b></div>
+    <div class="total"><span>Montant net estimé</span><b class="num pos">${fmt(net)}</b></div>
+  `;
+}
+
+/* --- Journal des décisions (PRO) --- */
+let journal = load('brvm_journal', []);
+function renderJournal(){
+  const card = document.getElementById('proJournalCard');
+  if(!isPro()){
+    card.innerHTML = proLockHtml('📓 Journal des décisions', "Note chaque achat/vente avec ta raison du moment — relis-le dans 6 mois pour progresser, comme le font les investisseurs sérieux.");
+    return;
+  }
+  card.innerHTML = `
+    <h2>📓 Journal des décisions <span class="pro-badge">PRO</span></h2>
+    <div class="row2">
+      <div><label>Titre</label><input type="text" id="jTicker" placeholder="ex: SNTS"></div>
+      <div><label>Action</label><select id="jAction"><option value="Achat">Achat</option><option value="Vente">Vente</option><option value="Observation">Observation</option></select></div>
+    </div>
+    <label>Raison de la décision</label>
+    <textarea id="jRaison" rows="2" placeholder="ex: Résultats annuels solides, dividende en hausse..."></textarea>
+    <button class="btn-primary" onclick="ajouterJournal()">Ajouter au journal</button>
+    <div id="journalListWrap" style="margin-top:14px;"></div>
+  `;
+  renderJournalList();
+}
+function ajouterJournal(){
+  const ticker = document.getElementById('jTicker').value.trim().toUpperCase();
+  const action = document.getElementById('jAction').value;
+  const raison = document.getElementById('jRaison').value.trim();
+  if(!ticker || !raison){ alert('Renseigne au moins le titre et la raison.'); return; }
+  journal.unshift({id:Date.now(), date:new Date().toISOString(), ticker, action, raison});
+  save('brvm_journal', journal);
+  document.getElementById('jTicker').value=''; document.getElementById('jRaison').value='';
+  renderJournalList();
+}
+function supprimerJournal(id){
+  journal = journal.filter(j=>j.id!==id);
+  save('brvm_journal', journal);
+  renderJournalList();
+}
+function renderJournalList(){
+  const wrap = document.getElementById('journalListWrap');
+  if(!wrap) return;
+  if(journal.length===0){ wrap.innerHTML='<div class="empty">Aucune entrée pour l\'instant.</div>'; return; }
+  wrap.innerHTML = journal.map(j=>`
+    <div style="padding:10px 0;border-bottom:1px solid var(--line);">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-dim);">
+        <span>${new Date(j.date).toLocaleDateString('fr-FR')} — <span class="ticker-badge">${j.ticker}</span> ${j.action}</span>
+        <button class="btn-danger" style="padding:3px 8px;" onclick="supprimerJournal(${j.id})">✕</button>
+      </div>
+      <p style="font-size:13.5px;margin:5px 0 0;">${j.raison}</p>
+    </div>
+  `).join('');
+}
+
+/* --- Export rapport (PRO) --- */
+function renderExportBtn(){
+  const wrap = document.getElementById('pfExportWrap');
+  if(!wrap) return;
+  if(!isPro()){
+    wrap.innerHTML = `<div class="note">💎 Exporte un rapport CSV ou imprimable de ce portefeuille avec la version PRO.</div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <button class="btn-ghost" onclick="exporterCSV()">⬇️ Exporter en CSV</button>
+    <button class="btn-ghost" onclick="window.print()">🖨️ Imprimer / PDF</button>
+  `;
+}
+function exporterCSV(){
+  const pf = getActivePF();
+  let csv = 'Ticker;Nom;Secteur;Quantite;PrixAchat;PrixActuel;ValeurActuelle;GainPerte\n';
+  pf.positions.forEach(p=>{
+    const va = p.qte*p.prixActuel;
+    const gain = va - p.qte*p.prixAchat;
+    csv += `${p.ticker};${p.nom};${p.secteur};${p.qte};${p.prixAchat};${p.prixActuel};${va};${gain}\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${pf.nom.replace(/\s+/g,'_')}_rapport.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ================= Historique automatique + recalcul central ================= */
+function enregistrerSnapshotJournalier(){
+  const todayStr = new Date().toISOString().slice(0,10);
+  let hist = load('brvm_historique_valeur', []);
+  const toutesPositions = portefeuilles.flatMap(pf=>pf.positions);
+  const valeur = toutesPositions.reduce((s,p)=>s+p.qte*p.prixActuel,0);
+  if(hist.length===0 || hist[hist.length-1].date !== todayStr){
+    hist.push({date:todayStr, valeur});
+    if(hist.length>365) hist = hist.slice(-365);
+  } else {
+    hist[hist.length-1].valeur = valeur;
+  }
+  save('brvm_historique_valeur', hist);
+  return hist;
+}
+
+function renderHistoriqueChart(){
+  const hist = load('brvm_historique_valeur', []);
+  const card = document.getElementById('dashHistorique');
+  if(hist.length < 2){ card.style.display='none'; return; }
+  card.style.display='block';
+  const points = hist.slice(-30).map(h=>h.valeur);
+  const dates = hist.slice(-30).map(h=>h.date);
+  const w=290,h=130,pad=8;
+  const max = Math.max(...points,1), min = Math.min(...points,0);
+  const range = (max-min)||1;
+  const stepX = points.length>1 ? (w-2*pad)/(points.length-1) : 0;
+  const pathPts = points.map((v,i)=>{
+    const x = pad + i*stepX;
+    const y = h-pad - ((v-min)/range)*(h-2*pad);
+    return `${x},${y}`;
+  }).join(' ');
+  const dernier = points[points.length-1];
+  const premier = points[0];
+  const evolution = premier>0 ? ((dernier-premier)/premier*100) : 0;
+  const cls = evolution>=0 ? 'pos':'neg';
+  document.getElementById('histoChartWrap').innerHTML = `
+    <div class="line" style="padding:0 0 8px;"><span>Évolution sur la période affichée</span><b class="num ${cls}">${evolution>=0?'+':''}${evolution.toFixed(1)}%</b></div>
+    <svg class="chart" viewBox="0 0 ${w} ${h}">
+      <polyline points="${pathPts}" fill="none" stroke="#D4A94C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </svg>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink-dim);margin-top:4px;">
+      <span>${new Date(dates[0]).toLocaleDateString('fr-FR')}</span><span>${new Date(dates[dates.length-1]).toLocaleDateString('fr-FR')}</span>
+    </div>
+  `;
+}
+
+function recalcAll(){
+  enregistrerSnapshotJournalier();
+  renderDashboard();
+  renderHistoriqueChart();
+  if(document.getElementById('view-portefeuille').classList.contains('active')) renderPortefeuille();
+  if(document.getElementById('view-expert').classList.contains('active')) renderDecisionEngine();
+}
+
+/* ================= Calculateur ================= */
+function calculerGain(){
+  const pa = parseFloat(document.getElementById('calcPrixAchat').value)||0;
+  const pv = parseFloat(document.getElementById('calcPrixVente').value)||0;
+  const qte = parseFloat(document.getElementById('calcQte').value)||0;
+  const fraisPct = parseFloat(document.getElementById('calcFraisPct').value)||0;
+  const fraisMin = parseFloat(document.getElementById('calcFraisMin').value)||0;
+
+  const montantAchat = pa*qte;
+  const montantVente = pv*qte;
+  let fraisAchat = montantAchat*fraisPct/100;
+  if(fraisAchat < fraisMin) fraisAchat = fraisMin;
+  let fraisVente = montantVente*fraisPct/100;
+  if(fraisVente < fraisMin) fraisVente = fraisMin;
+
+  const coutTotalAchat = montantAchat + fraisAchat;
+  const netVente = montantVente - fraisVente;
+  const gainNet = netVente - coutTotalAchat;
+  const gainPct = coutTotalAchat>0 ? (gainNet/coutTotalAchat*100) : 0;
+
+  // seuil de rentabilité : prix de vente mini pour être à l'équilibre
+  const seuil = qte>0 ? (coutTotalAchat + fraisMin) / (qte*(1-fraisPct/100)) : 0;
+
+  const cls = gainNet>=0 ? 'pos':'neg';
+  const el = document.getElementById('calcResult');
+  el.style.display='block';
+  el.innerHTML = `
+    <div class="line"><span>Montant achat</span><b class="num">${fmt(montantAchat)}</b></div>
+    <div class="line"><span>Frais à l'achat</span><b class="num">${fmt(fraisAchat)}</b></div>
+    <div class="line"><span>Montant vente</span><b class="num">${fmt(montantVente)}</b></div>
+    <div class="line"><span>Frais à la vente</span><b class="num">${fmt(fraisVente)}</b></div>
+    <div class="line"><span>Seuil de rentabilité (prix/titre)</span><b class="num">${fmtNum(seuil)} FCFA</b></div>
+    <div class="total ${cls}"><span>Résultat net</span><b class="num">${gainNet>=0?'+':''}${fmt(gainNet)} (${gainPct.toFixed(2)}%)</b></div>
+  `;
+}
+
+/* ================= Portefeuille ================= */
+function renderSocieteSelect(){
+  const sel = document.getElementById('pfSociete');
+  sel.innerHTML = societes.map(s=>`<option value="${s.ticker}">${s.ticker} — ${s.nom}</option>`).join('');
+}
+
+function ajouterPosition(){
+  const ticker = document.getElementById('pfSociete').value;
+  const soc = societes.find(s=>s.ticker===ticker);
+  const qte = parseFloat(document.getElementById('pfQte').value)||0;
+  const prixAchat = parseFloat(document.getElementById('pfPrixAchat').value)||0;
+  const prixActuel = parseFloat(document.getElementById('pfPrixActuel').value)|| prixAchat;
+  const prixCible = parseFloat(document.getElementById('pfPrixCible').value)||null;
+
+  if(!ticker || qte<=0 || prixAchat<=0){
+    alert('Renseigne au moins la quantité et le prix d\'achat.');
+    return;
+  }
+
+  getActivePF().positions.push({
+    id: Date.now(),
+    ticker, nom: soc?soc.nom:ticker, secteur: soc?soc.secteur:'Autre',
+    qte, prixAchat, prixActuel, prixCible, lastMaj: new Date().toISOString()
+  });
+  save('brvm_portefeuilles', portefeuilles);
+  document.getElementById('pfQte').value='';
+  document.getElementById('pfPrixAchat').value='';
+  document.getElementById('pfPrixActuel').value='';
+  document.getElementById('pfPrixCible').value='';
+  renderPortefeuille();
+  recalcAll();
+}
+
+function updatePrixActuel(id, val){
+  const p = getActivePF().positions.find(x=>x.id===id);
+  if(p){ p.prixActuel = parseFloat(val)||p.prixActuel; p.lastMaj = new Date().toISOString(); save('brvm_portefeuilles', portefeuilles); renderPortefeuille(); recalcAll(); }
+}
+
+function supprimerPosition(id){
+  const pf = getActivePF();
+  pf.positions = pf.positions.filter(p=>p.id!==id);
+  save('brvm_portefeuilles', portefeuilles);
+  renderPortefeuille();
+  recalcAll();
+}
+
+function renderPortefeuille(){
+  const wrap = document.getElementById('pfListWrap');
+  const positions = getActivePF().positions;
+  if(positions.length===0){
+    wrap.innerHTML = '<div class="empty"><span class="ic">📊</span>Aucune position pour l\'instant.</div>';
+    renderExportBtn();
+    return;
+  }
+  // Alertes : concentration excessive + diversification sectorielle + objectifs de cours
+  const valeurTotale = positions.reduce((s,p)=>s+p.qte*p.prixActuel,0);
+  const parTicker = {};
+  positions.forEach(p=>{ parTicker[p.ticker] = (parTicker[p.ticker]||0) + p.qte*p.prixActuel; });
+  let alertsHtml = '';
+  Object.entries(parTicker).forEach(([tk,val])=>{
+    const pct = valeurTotale>0 ? val/valeurTotale*100 : 0;
+    if(pct > 30){
+      alertsHtml += `<div class="alert-box">⚠️ <strong>${tk}</strong> représente ${pct.toFixed(0)}% de ton portefeuille — au-delà de 25-30%, une seule mauvaise nouvelle sur ce titre peut fortement impacter tout ton capital. Envisage de diversifier.</div>`;
+    }
+  });
+  const secteursUniques = new Set(positions.map(p=>p.secteur)).size;
+  if(positions.length>=3 && secteursUniques===1){
+    alertsHtml += `<div class="alert-box warn-gold">💡 Toutes tes positions sont dans le même secteur. Les investisseurs expérimentés répartissent généralement entre plusieurs secteurs pour limiter le risque.</div>`;
+  }
+  if(isPro()){
+    positions.forEach(p=>{
+      if(p.prixCible && p.prixActuel >= p.prixCible){
+        alertsHtml += `<div class="alert-box warn-gold">🎯 <strong>${p.ticker}</strong> a atteint ton objectif de cours (${fmtNum(p.prixCible)} FCFA) — c'est peut-être le moment de revoir ta position.</div>`;
+      }
+    });
+  }
+  const perimes = positions.filter(p=>p.lastMaj && (Date.now()-new Date(p.lastMaj).getTime())/86400000 > 7);
+  if(perimes.length>0){
+    alertsHtml += `<div class="alert-box">⏰ Prix non mis à jour depuis plus de 7 jours : <strong>${perimes.map(p=>p.ticker).join(', ')}</strong>. Vérifie les derniers cours sur brvm.org ou via ta SGI.</div>`;
+  }
+
+  let html = alertsHtml + '<table><thead><tr><th>Titre</th><th>Qté</th><th>P. actuel</th><th>Résultat</th></tr></thead><tbody>';
+  positions.forEach(p=>{
+    const valAchat = p.qte*p.prixAchat;
+    const valActuelle = p.qte*p.prixActuel;
+    const gain = valActuelle - valAchat;
+    const gainPct = valAchat>0 ? (gain/valAchat*100) : 0;
+    const cls = gain>=0?'pos':'neg';
+    html += `<tr>
+      <td><span class="ticker-badge">${p.ticker}</span><div class="row-actions">
+        <button class="btn-danger" onclick="supprimerPosition(${p.id})">Retirer</button>
+      </div></td>
+      <td class="num">${fmtNum(p.qte)}</td>
+      <td><input type="number" value="${p.prixActuel}" style="width:90px;padding:6px 8px;font-size:13px;" onchange="updatePrixActuel(${p.id}, this.value)"></td>
+      <td class="num ${cls}">${gain>=0?'+':''}${fmtNum(gain)}<br><span style="font-size:11px;">(${gainPct.toFixed(1)}%)</span></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  renderExportBtn();
+}
+
+/* ================= Dashboard ================= */
+function renderDashboard(){
+  let valeurTotale=0, gainTotal=0;
+  const parSecteur = {};
+  const toutesPositions = portefeuilles.flatMap(pf=>pf.positions);
+  toutesPositions.forEach(p=>{
+    const va = p.qte*p.prixActuel;
+    const gA = va - p.qte*p.prixAchat;
+    valeurTotale += va;
+    gainTotal += gA;
+    parSecteur[p.secteur] = (parSecteur[p.secteur]||0) + va;
+  });
+  document.getElementById('kpiValeur').textContent = fmt(valeurTotale);
+  const kg = document.getElementById('kpiGain');
+  kg.textContent = (gainTotal>=0?'+':'') + fmt(gainTotal);
+  kg.className = 'val num ' + (gainTotal>=0?'pos':'neg');
+
+  const repartWrap = document.getElementById('repartBars');
+  const repartEmpty = document.getElementById('repartEmpty');
+  const secteurs = Object.entries(parSecteur).sort((a,b)=>b[1]-a[1]);
+  if(secteurs.length===0){
+    repartEmpty.style.display='block';
+    repartWrap.innerHTML='';
+  } else {
+    repartEmpty.style.display='none';
+    repartWrap.innerHTML = secteurs.map(([sec,val])=>{
+      const pct = valeurTotale>0 ? (val/valeurTotale*100) : 0;
+      return `<div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span>${sec}</span><span class="num">${pct.toFixed(0)}%</span></div>
+        <div class="barwrap"><div class="bar" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  const dashProfileText = document.getElementById('dashProfileText');
+  if(profilResultat){
+    dashProfileText.innerHTML = `Profil : <strong style="color:var(--gold)">${profilResultat.label}</strong> — ${profilResultat.desc}`;
+  }
+}
+
+/* ================= Simulateur ================= */
+function simulerInterets(){
+  const capital = parseFloat(document.getElementById('simCapital').value)||0;
+  const versement = parseFloat(document.getElementById('simVersement').value)||0;
+  const tauxAnnuel = parseFloat(document.getElementById('simTaux').value)||0;
+  const duree = parseInt(document.getElementById('simDuree').value)||0;
+
+  const tauxMensuel = tauxAnnuel/100/12;
+  let solde = capital;
+  const points = [solde];
+  let totalVerse = capital;
+  for(let m=1; m<=duree*12; m++){
+    solde = solde*(1+tauxMensuel) + versement;
+    totalVerse += versement;
+    if(m % 12 === 0) points.push(solde);
+  }
+  const gains = solde - totalVerse;
+
+  const el = document.getElementById('simResult');
+  el.style.display='block';
+  let alerte = '';
+  if(tauxAnnuel > 15){
+    alerte = `<div class="alert-box" style="margin-bottom:12px;">⚠️ Un rendement annuel de ${tauxAnnuel}% sur la durée est optimiste — les investisseurs expérimentés se méfient des projections trop hautes. Teste aussi avec un taux plus prudent (8-10%).</div>`;
+  }
+  el.innerHTML = alerte + `
+    <div class="line"><span>Total versé sur ${duree} ans</span><b class="num">${fmt(totalVerse)}</b></div>
+    <div class="line"><span>Gains générés (estimation)</span><b class="num pos">${fmt(gains)}</b></div>
+    <div class="total"><span>Capital final estimé</span><b class="num">${fmt(solde)}</b></div>
+  `;
+
+  // graphique simple
+  const w=280,h=120,pad=8;
+  const max = Math.max(...points);
+  const stepX = (w-2*pad)/(points.length-1||1);
+  const pathPts = points.map((v,i)=>{
+    const x = pad + i*stepX;
+    const y = h-pad - (v/max)*(h-2*pad);
+    return `${x},${y}`;
+  }).join(' ');
+  document.getElementById('simChartWrap').innerHTML = `
+    <svg class="chart" viewBox="0 0 ${w} ${h}">
+      <polyline points="${pathPts}" fill="none" stroke="#D4A94C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${points.map((v,i)=>{const x=pad+i*stepX; const y=h-pad-(v/max)*(h-2*pad); return `<circle cx="${x}" cy="${y}" r="3" fill="#D4A94C"/>`;}).join('')}
+    </svg>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink-dim);margin-top:4px;"><span>Année 0</span><span>Année ${duree}</span></div>
+  `;
+}
+
+/* ================= Profil investisseur ================= */
+const QUIZ = [
+  {q:"Si la valeur de ton portefeuille chutait de 20% en un mois, tu réagirais comment ?", opts:[
+    {t:"Je vends tout immédiatement pour limiter les pertes", pts:1},
+    {t:"Je m'inquiète mais j'attends de voir", pts:2},
+    {t:"Je considère ça comme une opportunité d'acheter plus", pts:3}
+  ]},
+  {q:"Quel est ton horizon de placement principal ?", opts:[
+    {t:"Moins d'un an", pts:1},{t:"1 à 5 ans", pts:2},{t:"Plus de 5 ans", pts:3}
+  ]},
+  {q:"Ta priorité en investissant à la BRVM ?", opts:[
+    {t:"Préserver mon capital avant tout", pts:1},
+    {t:"Un équilibre entre sécurité et croissance", pts:2},
+    {t:"Maximiser la croissance, quitte à prendre des risques", pts:3}
+  ]},
+  {q:"As-tu déjà investi en bourse auparavant ?", opts:[
+    {t:"Jamais", pts:1},{t:"Un peu, je découvre encore", pts:2},{t:"Oui, régulièrement", pts:3}
+  ]},
+  {q:"Quelle part de ton épargne es-tu prêt à investir en actions ?", opts:[
+    {t:"Moins de 20%", pts:1},{t:"20% à 50%", pts:2},{t:"Plus de 50%", pts:3}
+  ]}
+];
+let quizReponses = {};
+
+function renderQuiz(){
+  const wrap = document.getElementById('quizWrap');
+  wrap.innerHTML = QUIZ.map((item,qi)=>`
+    <div class="quiz-q">
+      <p><strong>${qi+1}.</strong> ${item.q}</p>
+      ${item.opts.map((o,oi)=>`<button type="button" class="quiz-opt" id="q${qi}o${oi}" onclick="selectOpt(${qi},${oi},${o.pts})">${o.t}</button>`).join('')}
+    </div>
+  `).join('');
+}
+
+function selectOpt(qi,oi,pts){
+  quizReponses[qi]=pts;
+  document.querySelectorAll(`[id^="q${qi}o"]`).forEach(b=>b.classList.remove('selected'));
+  document.getElementById(`q${qi}o${oi}`).classList.add('selected');
+}
+
+function calculerProfil(){
+  const total = Object.values(quizReponses).reduce((a,b)=>a+b,0);
+  if(Object.keys(quizReponses).length < QUIZ.length){
+    alert('Réponds à toutes les questions pour voir ton profil.');
+    return;
+  }
+  let label, desc, tag;
+  if(total<=7){ label='Prudent'; tag='🛡️'; desc="Tu privilégies la sécurité du capital. Oriente-toi vers des valeurs solides, à dividendes réguliers, et diversifie plutôt que de concentrer sur une seule ligne."; }
+  else if(total<=11){ label='Modéré'; tag='⚖️'; desc="Tu cherches un équilibre entre sécurité et croissance. Un portefeuille diversifié entre grandes capitalisations stables et quelques valeurs de croissance te correspond."; }
+  else { label='Audacieux'; tag='🚀'; desc="Tu acceptes plus de volatilité pour viser une croissance plus forte. Reste vigilant : même avec un profil audacieux, la diversification et la patience restent essentielles."; }
+
+  profilResultat = {label, desc, total};
+  save('brvm_profil', profilResultat);
+
+  const card = document.getElementById('profilResultCard');
+  card.style.display='block';
+  card.innerHTML = `
+    <div class="profile-badge">
+      <div class="tag">${tag} ${label}</div>
+      <p style="color:var(--ink-dim);font-size:14px;">${desc}</p>
+    </div>
+    <div class="note">Ce test est indicatif et ne remplace pas un conseil personnalisé. En finance islamique, la prudence et le rejet de la spéculation excessive (gharar) sont valorisés quel que soit ton profil de risque.</div>
+  `;
+}
+
+/* ================= Expert : erreurs, principes, checklist ================= */
+const ERREURS = [
+  {tag:"Panique", texte:"Vendre en panique dès une baisse de cours, sans regarder les fondamentaux de l'entreprise. Une baisse ponctuelle n'est pas forcément un signal de vente — c'est souvent le marché qui réagit à court terme."},
+  {tag:"Rumeurs", texte:"Investir sur la base d'une rumeur WhatsApp ou d'un \"tuyau\" sans vérifier les chiffres réels de la société (résultats, dividendes, dettes). À la BRVM, l'information circule vite mais n'est pas toujours fiable."},
+  {tag:"Concentration", texte:"Mettre tout son capital sur une seule valeur, même si elle semble solide. Une seule mauvaise nouvelle sectorielle peut affecter durement un portefeuille non diversifié."},
+  {tag:"Liquidité", texte:"Sous-estimer le manque de liquidité de certaines valeurs BRVM : quelques titres comme Sonatel concentrent l'essentiel des volumes, les autres peuvent être difficiles à revendre rapidement au prix voulu."},
+  {tag:"Sur-trading", texte:"Acheter et vendre trop fréquemment. Chaque aller-retour paie des frais de courtage qui rognent la performance — la patience coûte moins cher que l'agitation."},
+  {tag:"Suivisme", texte:"Acheter une action seulement parce qu'elle vient de beaucoup monter (\"FOMO\"). Le meilleur moment d'achat est rarement celui où tout le monde en parle déjà."},
+  {tag:"Absence de plan", texte:"Investir sans objectif ni horizon clair. Sans savoir pourquoi on investit (revenu, croissance, retraite), on ne sait pas non plus quand vendre ou renforcer."},
+  {tag:"Ignorer les frais", texte:"Ne pas comparer les tarifs des différentes SGI. Sur le long terme, une différence de 0,5% de frais de courtage représente des centaines de milliers de FCFA cumulés."}
+];
+
+const PRINCIPES = [
+  {tag:"Horizon long", texte:"Les investisseurs expérimentés raisonnent en années, pas en semaines. La BRVM récompense surtout la patience et le réinvestissement des dividendes."},
+  {tag:"Diversification", texte:"Répartir son capital entre plusieurs secteurs (télécoms, agro-industrie, banque, distribution) réduit le risque qu'un seul événement fasse chuter tout le portefeuille."},
+  {tag:"Analyse avant émotion", texte:"Avant d'acheter, regarder les fondamentaux simples : le PER (prix/bénéfice), le rendement du dividende, et la régularité des résultats sur plusieurs années."},
+  {tag:"Investissement progressif", texte:"Investir régulièrement de petits montants (chaque mois par exemple) plutôt que tout d'un coup lisse le prix d'achat moyen et réduit le stress du \"bon moment\"."},
+  {tag:"Garder une réserve", texte:"Ne jamais investir l'argent dont on pourrait avoir besoin à court terme — la BRVM n'est pas un compte d'épargne liquide instantanément."},
+  {tag:"Vérifier la conformité", texte:"Pour un investisseur soucieux des principes de la finance islamique, vérifier le secteur d'activité et le niveau d'endettement à intérêt de chaque société avant d'investir."},
+  {tag:"Revue périodique", texte:"Revoir son portefeuille une fois par trimestre suffit largement — consulter les cours tous les jours pousse souvent à des décisions émotionnelles inutiles."}
+];
+
+const CHECKLIST_ITEMS = [
+  "J'ai vérifié les résultats financiers récents de la société (pas seulement le cours)",
+  "Je connais le secteur d'activité et les risques qui lui sont propres",
+  "Cette position ne dépassera pas 25-30% de mon portefeuille total",
+  "J'ai comparé le prix avec mon prix de revient et les frais de courtage",
+  "Je n'investis pas de l'argent dont j'aurai besoin dans les 12 prochains mois",
+  "Ma décision n'est pas motivée par une rumeur ou une hausse récente du cours",
+  "Cette société est compatible avec mes principes d'investissement (finance islamique le cas échéant)"
+];
+
+function renderExpertContent(){
+  document.getElementById('erreursWrap').innerHTML = ERREURS.map(e=>`
+    <div class="lesson"><div class="tag">⚠ ${e.tag}</div><p>${e.texte}</p></div>
+  `).join('');
+  document.getElementById('principesWrap').innerHTML = PRINCIPES.map(p=>`
+    <div class="principe"><div class="tag">✓ ${p.tag}</div><p>${p.texte}</p></div>
+  `).join('');
+  renderChecklist();
+}
+
+let checklistState = load('brvm_checklist', {});
+function renderChecklist(){
+  const wrap = document.getElementById('checklistWrap');
+  wrap.innerHTML = CHECKLIST_ITEMS.map((txt,i)=>{
+    const checked = checklistState[i];
+    return `<div class="check-item ${checked?'checked':''}" onclick="toggleCheck(${i})">
+      <div class="box">${checked?'✓':''}</div><span class="txt">${txt}</span>
+    </div>`;
+  }).join('');
+}
+function toggleCheck(i){
+  checklistState[i] = !checklistState[i];
+  save('brvm_checklist', checklistState);
+  renderChecklist();
+}
+function resetChecklist(){
+  checklistState = {};
+  save('brvm_checklist', checklistState);
+  renderChecklist();
+}
+
+/* --- Actualisation automatique des prix (source communautaire non officielle) --- */
+async function fetchPrixEnLigne(ticker){
+  const variantes = [ticker.toUpperCase(), ticker.toLowerCase()];
+  for(const v of variantes){
+    try{
+      const url = `https://raw.githubusercontent.com/Fredysessie/brvm-data-public/main/data/${v}/${v}.daily.csv?t=${Date.now()}`;
+      const res = await fetch(url, {cache:'no-store'});
+      if(!res.ok) continue;
+      const text = await res.text();
+      const lines = text.trim().split('\n').filter(Boolean);
+      if(lines.length<2) continue;
+      const headers = lines[0].split(',').map(h=>h.trim().toLowerCase());
+      const closeIdx = headers.indexOf('close');
+      if(closeIdx===-1) continue;
+      const last = lines[lines.length-1].split(',');
+      const close = parseFloat(last[closeIdx]);
+      if(!isNaN(close) && close>0) return close;
+    } catch(e){ /* essai suivant */ }
+  }
+  return null;
+}
+
+async function actualiserPrixEnLigne(){
+  const btn = document.getElementById('btnActualiserPrix');
+  const statusEl = document.getElementById('actualisationStatus');
+  const pf = getActivePF();
+  if(pf.positions.length===0){
+    statusEl.innerHTML = '<div class="note">Ajoute d\'abord des positions à ce portefeuille.</div>';
+    return;
+  }
+  if(!navigator.onLine){
+    statusEl.innerHTML = '<div class="alert-box">📡 Pas de connexion détectée — connecte-toi à internet puis réessaie. La saisie manuelle reste disponible en attendant.</div>';
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'Actualisation en cours...';
+  statusEl.innerHTML = '';
+  let succes=[], echecs=[];
+  for(const p of pf.positions){
+    const close = await fetchPrixEnLigne(p.ticker);
+    if(close){
+      p.prixActuel = close;
+      p.lastMaj = new Date().toISOString();
+      succes.push(p.ticker);
+    } else {
+      echecs.push(p.ticker);
+    }
+  }
+  save('brvm_portefeuilles', portefeuilles);
+  renderPortefeuille();
+  recalcAll();
+  btn.disabled = false; btn.textContent = '🔄 Actualiser tous les prix en ligne (bêta)';
+  let msg = '';
+  if(succes.length) msg += `<div class="alert-box warn-gold">✅ Mis à jour automatiquement : ${succes.join(', ')}</div>`;
+  if(echecs.length) msg += `<div class="alert-box">⚠️ Source indisponible pour : ${echecs.join(', ')} — corrige le prix toi-même pour ces titres dans le tableau.</div>`;
+  statusEl.innerHTML = msg;
+}
+
+/* ================= Sociétés ================= */
+function renderSocietes(){
+  const q = (document.getElementById('socSearch').value||'').toLowerCase();
+  const wrap = document.getElementById('socListWrap');
+  const filtered = societes.filter(s => (s.ticker+s.nom+s.secteur).toLowerCase().includes(q));
+  if(filtered.length===0){
+    wrap.innerHTML = '<div class="empty">Aucun résultat.</div>';
+    return;
+  }
+  wrap.innerHTML = filtered.map(s=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+      <div>
+        <span class="ticker-badge">${s.ticker}</span>
+        <span style="margin-left:8px;font-size:14px;">${s.nom}</span>
+        <span class="badge-flag ${s.flag==='ok'?'flag-ok':'flag-check'}">${s.flag==='ok'?'OK':'À vérifier'}</span>
+        <div style="font-size:12px;color:var(--ink-dim);margin-top:2px;">${s.secteur}</div>
+      </div>
+      <button class="btn-danger" onclick="supprimerSociete('${s.ticker}')">✕</button>
+    </div>
+  `).join('');
+}
+
+function ajouterSociete(){
+  const ticker = document.getElementById('socTicker').value.trim().toUpperCase();
+  const nom = document.getElementById('socNom').value.trim();
+  const secteur = document.getElementById('socSecteur').value.trim() || 'Autre';
+  const flag = document.getElementById('socFlag').value;
+  if(!ticker || !nom){ alert('Renseigne au moins le ticker et le nom.'); return; }
+  societes = societes.filter(s=>s.ticker!==ticker);
+  societes.push({ticker,nom,secteur,flag});
+  save('brvm_societes', societes);
+  document.getElementById('socTicker').value='';
+  document.getElementById('socNom').value='';
+  document.getElementById('socSecteur').value='';
+  renderSocietes();
+  renderSocieteSelect();
+}
+
+function supprimerSociete(ticker){
+  societes = societes.filter(s=>s.ticker!==ticker);
+  save('brvm_societes', societes);
+  renderSocietes();
+  renderSocieteSelect();
+}
+
+/* ================= Init ================= */
+renderQuiz();
+renderSocieteSelect();
+renderPortefeuilleSelector();
+renderPortefeuille();
+renderSocietes();
+renderDashboard();
+renderExpertContent();
+renderProStatus();
+renderAllProCards();
+recalcAll();
+
+/* ================= Service Worker ================= */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err=>console.log('SW erreur:', err));
+  });
+}
+</script>
+</body>
+</html>

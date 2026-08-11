@@ -1,0 +1,18 @@
+{
+  "name": "BRVM Invest Pro",
+  "short_name": "BRVM Invest",
+  "description": "Calculateur, portefeuille et simulateur pour investir à la BRVM",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0E1626",
+  "theme_color": "#0E1626",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%230E1626'/%3E%3Ctext x='96' y='120' font-size='90' text-anchor='middle' fill='%23D4A94C' font-family='Georgia,serif'%3EB%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
